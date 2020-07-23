@@ -1,5 +1,5 @@
-from config import db, ma
 from apps.apikeys.security import verify_apikey
+from config import db
 
 
 class ApiKey(db.Model):
@@ -16,12 +16,3 @@ class ApiKey(db.Model):
         self.apikey = apikey
         self.apikey_hash = apikey_hash
         self.email = email
-
-
-class ApiKeySchema(ma.Schema):
-    class Meta:
-        fields = ('id', 'apikey', 'apikey_hash', 'email')
-
-
-apikey_schema = ApiKeySchema()
-apikeys_schema = ApiKeySchema(many=True)

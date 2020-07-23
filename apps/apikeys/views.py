@@ -1,10 +1,11 @@
-from flask_restx import Namespace, Resource, fields
-from flask import request
 import uuid
+
+from flask import request
+from flask_restx import Namespace, Resource, fields
+
+from apps.apikeys.models import ApiKey, db
+from apps.apikeys.schemas import apikey_schema
 from apps.apikeys.security import encrypt
-
-from apps.apikeys.models import ApiKey, apikey_schema, db
-
 
 api = Namespace('apikey', description='Monitor apikeys operations')
 
@@ -44,4 +45,5 @@ class UsersResource(Resource):
     def get(self, apikey):
         query = ApiKey.query.filter_by(apikey=apikey).first_or_404()
         is_valid_apikey = query.check_apikey(apikey)
+        print(is_valid_apikey)
         return apikey_schema.dump(query)
