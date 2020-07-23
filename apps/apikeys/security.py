@@ -1,5 +1,10 @@
 import hashlib
 import os
+import uuid
+
+
+def gen_new_key():
+    return str(uuid.uuid4())
 
 
 def encrypt(apikey):

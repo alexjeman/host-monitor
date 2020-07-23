@@ -1,4 +1,6 @@
-from config import ma
+from config.settings import Settings
+
+ma = Settings.ma
 
 
 class ApiKeySchema(ma.Schema):

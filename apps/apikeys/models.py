@@ -1,5 +1,7 @@
 from apps.apikeys.security import verify_apikey
-from config import db
+from config.settings import Settings
+
+db = Settings.db
 
 
 class ApiKey(db.Model):

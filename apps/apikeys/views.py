@@ -1,15 +1,13 @@
-import uuid
-
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from apps.apikeys.models import ApiKey, db
 from apps.apikeys.schemas import apikey_schema
-from apps.apikeys.security import encrypt
+from apps.apikeys.security import encrypt, gen_new_key
 
 api = Namespace('apikey', description='Monitor apikeys operations')
 
-ApiKeySerializerGet = api.model('ApiKeySerializerGet', {
+ApiKeySerializer = api.model('ApiKeySerializer', {
     'id': fields.Integer,
     'email': fields.String,
     'apikey': fields.String,
@@ -22,11 +20,11 @@ ApiKeySerializerPost = api.model('ApiKeySerializerPost', {
 
 
 @api.route('/', methods=['GET', 'POST'])
-class UsersResource(Resource):
+class ApiKeyResource(Resource):
     @api.doc('generate_apikey')
     @api.expect(ApiKeySerializerPost)
     def post(self):
-        generate_apikey = str(uuid.uuid4())
+        generate_apikey = gen_new_key()
         new_apikey = ApiKey(
             apikey=generate_apikey,
             apikey_hash=encrypt(generate_apikey),
@@ -38,10 +36,10 @@ class UsersResource(Resource):
 
 
 @api.route('/<apikey>/')
-@api.param('apikey', 'ApiKey identifier')
-class UsersResource(Resource):
+@api.param('apikey', 'Your Api Key')
+class ApiKeyResource(Resource):
     @api.doc('get_apikey')
-    @api.marshal_with(ApiKeySerializerGet)
+    @api.marshal_with(ApiKeySerializer)
     def get(self, apikey):
         query = ApiKey.query.filter_by(apikey=apikey).first_or_404()
         is_valid_apikey = query.check_apikey(apikey)
