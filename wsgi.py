@@ -1,4 +1,4 @@
-from run import create_app
+from apps import create_app
 
 app = create_app()
 
