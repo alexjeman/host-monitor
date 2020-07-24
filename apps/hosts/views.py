@@ -81,6 +81,9 @@ class HostResource(Resource):
                 ping_host_info = requests.get(host.url, timeout=60)
                 ping_host['status_code'] = ping_host_info.status_code
                 ping_host['response_time'] = int(ping_host_info.elapsed.total_seconds() * 1000)
+            except exceptions.ConnectTimeout:
+                ping_host['status_code'] = 408
+                ping_host['response_time'] = 60000
             except exceptions.ConnectionError:
                 ping_host['status_code'] = 404
                 ping_host['response_time'] = 0

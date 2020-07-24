@@ -16,7 +16,7 @@ load_dotenv(verbose=True)
 
 
 def ping_call():
-    requests.get('http://127.0.0.1:5000/hosts/ping-task/', timeout=300)
+    requests.get('http://127.0.0.1:5000/hosts/ping-task/', timeout=60)
 
 
 def create_app():
