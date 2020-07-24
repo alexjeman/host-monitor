@@ -22,7 +22,7 @@ class Stats(db.Model):
     __tablename__ = 'stats'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String, unique=False, nullable=True)
-    response_time = db.Column(db.Float, unique=False, nullable=True)
+    response_time = db.Column(db.Integer, unique=False, nullable=True)
     time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'),
                         nullable=True)

@@ -75,12 +75,12 @@ class HostResource(Resource):
         hosts = Hosts.query.filter_by(apikey_id=1).all()
         for _, host in enumerate(hosts):
             ping_host = {"status_code": 0,
-                         "response_time": Decimal(str(0.0))}
+                         "response_time": 0}
 
             try:
                 ping_host_info = requests.get(host.url, timeout=60)
                 ping_host['status_code'] = ping_host_info.status_code
-                ping_host['response_time'] = ping_host_info.elapsed.total_seconds() * 1000
+                ping_host['response_time'] = int(ping_host_info.elapsed.total_seconds() * 1000)
             except exceptions.ConnectionError:
                 ping_host['status_code'] = 404
                 ping_host['response_time'] = 0
