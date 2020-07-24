@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    env_file:
+      - .env
+    build: .
+    restart: always
+    command: gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
+    networks:
+      docker_network_host_monitor:
+        ipv4_address: 172.21.1.9
+    volumes:
+      - .:/usr/app/
+    ports:
+      - 5000:5000
+
+networks:
+  docker_network_host_monitor:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
