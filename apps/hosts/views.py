@@ -1,6 +1,7 @@
-from flask import request
+from flask import request, abort
 from flask_restx import Resource
 import requests
+from requests import exceptions
 
 from apps.apikeys.models import ApiKey
 from apps.apikeys.security import get_owner
@@ -23,6 +24,11 @@ class HostResource(Resource):
     @api.marshal_with(host_serializer, code=201)
     def post(self, apikey):
         owner = get_owner(ApiKey, apikey)
+        try:
+            requests.get(request.json['url'], timeout=60)
+        except exceptions.ConnectionError:
+            return abort(400, 'This host does not seem to exist, please enter a different host.')
+
         new_host = Hosts(
             apikey_id=owner.id,
             name=request.json['name'],
@@ -46,8 +52,19 @@ class HostResource(Resource):
         stats = Stats.query.filter_by(host_id=host_id).all()
         return stats
 
+    @api.doc('delete_host')
+    @api.marshal_with(host_serializer, code=202)
+    def delete(self, hostid, apikey):
+        owner = get_owner(ApiKey, apikey)
+        owned_hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
+        host_id = int(hostid) if int(hostid) in owned_hosts else api.abort(403)
+        host_obj = Hosts.query.get(host_id)
+        db.session.delete(host_obj)
+        db.session.commit()
+        return host_obj, 202
 
-@api.route('/ping-task/')
+
+@api.route('/ping-task/', doc=False)
 class HostResource(Resource):
     @api.doc('ping-task')
     def get(self):
