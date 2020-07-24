@@ -1,4 +1,4 @@
-import datetime
+from sqlalchemy.sql import func
 
 from apps.extensions import db
 
@@ -23,7 +23,7 @@ class Stats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String, unique=False, nullable=True)
     response_time = db.Column(db.Integer, unique=False, nullable=True)
-    time = db.Column(db.DateTime, default=datetime.datetime.now)
+    time = db.Column(db.DateTime(timezone=True), default=func.now())
     host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'),
                         nullable=True)
 
