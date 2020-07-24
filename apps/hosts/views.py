@@ -1,10 +1,14 @@
-from flask import request, abort
-from flask_restx import Resource
+from decimal import Decimal
+
 import requests
+from flask import request, abort
+from flask_mail import Message
+from flask_restx import Resource
 from requests import exceptions
 
 from apps.apikeys.models import ApiKey
 from apps.apikeys.security import get_owner
+from apps.extensions import mail
 from apps.hosts.models import Hosts, Stats, db
 from apps.hosts.namespace import api, host_serializer, host_serializer_post, stats_serializer
 
@@ -27,7 +31,7 @@ class HostResource(Resource):
         try:
             requests.get(request.json['url'], timeout=60)
         except exceptions.ConnectionError:
-            return abort(400, 'This host does not seem to exist, please enter a different host.')
+            return abort(400, 'This host does not seem to exist, please enter a valid http destination.')
 
         new_host = Hosts(
             apikey_id=owner.id,
@@ -70,14 +74,35 @@ class HostResource(Resource):
     def get(self):
         hosts = Hosts.query.filter_by(apikey_id=1).all()
         for _, host in enumerate(hosts):
-            ping_host = requests.get(host.url, timeout=60)
+            ping_host = {"status_code": 0,
+                         "response_time": Decimal(str(0.0))}
+
+            try:
+                ping_host_info = requests.get(host.url, timeout=60)
+                ping_host['status_code'] = ping_host_info.status_code
+                ping_host['response_time'] = ping_host_info.elapsed.total_seconds() * 1000
+            except exceptions.ConnectionError:
+                ping_host['status_code'] = 404
+                ping_host['response_time'] = 0
+
             new_stat = Stats(
-                code=ping_host.status_code,
-                response_time=ping_host.elapsed.total_seconds()*1000,
+                code=ping_host.get('status_code'),
+                response_time=ping_host.get('response_time'),
                 host_id=host.id,
             )
+            if ping_host['status_code'] > 400:
+                host_owner = ApiKey.query.get(host.apikey_id)
+                msg = Message(f"Host monitor alert {host.name}",
+                              sender="host@monitor.com",
+                              recipients=[host_owner.email],
+                              body=f"Looks like there is a problem with the host you are monitoring."
+                                   f"Host name: {host.name}"
+                                   f"Host url: {host.url}"
+                                   f"Status code: {ping_host['status_code']}"
+                                   f"Response time: {ping_host['response_time']}"
+                              )
+                mail.send(msg)
+
             db.session.add(new_stat)
             db.session.commit()
         return 'Ping task finished', 201
-
-

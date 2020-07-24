@@ -1,9 +1,11 @@
 from flask import request
+from flask_mail import Message
 from flask_restx import Resource
 
 from apps.apikeys.models import ApiKey, db
 from apps.apikeys.namespace import api, apikey_serializer, apikey_serializer_post, apikey_serializer_register
 from apps.apikeys.security import encrypt, gen_new_key, get_owner
+from apps.extensions import mail
 
 
 @api.route('/', methods=['GET', 'POST'])
@@ -19,6 +21,13 @@ class ApiKeyResource(Resource):
         )
         db.session.add(new_apikey)
         db.session.commit()
+        msg = Message("Your new API key has been generated",
+                      sender="host@monitor.com",
+                      recipients=[new_apikey.email],
+                      body=f"A request has been made to create a new API key for your account."
+                           f"this API key is not recoverable, if you loose it, you should generate a new one."
+                           f"{generate_apikey}")
+        mail.send(msg)
         new_apikey.apikey = generate_apikey
         return new_apikey, 201
 

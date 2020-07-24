@@ -10,6 +10,14 @@ class Settings(object):
     STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
     TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'templates')
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = os.getenv('MAIL_PORT')
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS')
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL')
+    MAIL_DEBUG = DEBUG
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    DEFAULT_MAIL_SENDER = os.getenv('DEFAULT_MAIL_SENDER')
 
     # Swagger UI config
     SWAGGER_UI_OPERATION_ID = True
