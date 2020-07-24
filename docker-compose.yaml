@@ -6,6 +6,8 @@ services:
       - .env
     build: .
     restart: always
+    environment:
+      TZ: "Europe/Istanbul"
     command: gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
     networks:
       docker_network_host_monitor:
