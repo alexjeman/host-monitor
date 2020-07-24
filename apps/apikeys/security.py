@@ -12,8 +12,13 @@ def encrypt(apikey):
     return hashlib.sha512((apikey + salt).encode('utf-8')).hexdigest()
 
 
-def verify_apikey(apikey_hash, apikey):
+def verify_apikey(api, apikey_hash, apikey):
     if apikey_hash != encrypt(apikey):
-        return False
+        return api.abort(403)
     else:
         return True
+
+
+def get_owner(obj, apikey):
+    query = obj.query.filter_by(apikey_hash=encrypt(apikey)).first_or_404()
+    return query

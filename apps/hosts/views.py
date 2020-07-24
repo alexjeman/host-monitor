@@ -1,55 +1,66 @@
 from flask import request
-from flask_restx import Namespace, Resource, fields
+from flask_restx import Resource
+import requests
 
-from apps.hosts.models import Host, Stats, db
-from apps.hosts.schemas import host_schema, stats_schema
-from apps.apikeys.security import encrypt, gen_new_key
-
-api = Namespace('hosts', description='Monitor host operations')
-
-HostSerializer = api.model('HostSerializer', {
-    'id': fields.Integer,
-    'name': fields.String,
-    'url': fields.String,
-})
-
-HostSerializerPost = api.model('HostSerializerPost', {
-    'name': fields.String,
-    'url': fields.String,
-})
-
-StatsSerializer = api.model('StatsSerializer', {
-    'id': fields.Integer,
-    'ping': fields.String,
-    'time': fields.String,
-})
-
-StatsSerializerPost = api.model('StatsSerializerPost', {
-    'ping': fields.String,
-    'time': fields.String,
-})
+from apps.apikeys.models import ApiKey
+from apps.apikeys.security import get_owner
+from apps.hosts.models import Hosts, Stats, db
+from apps.hosts.namespace import api, host_serializer, host_serializer_post, stats_serializer
 
 
 @api.route('/<apikey>/')
-@api.param('apikey', 'ApiKey identifier')
+@api.param('apikey', 'Your Api Key')
 class HostResource(Resource):
+    @api.doc('get_hosts')
+    @api.marshal_with(host_serializer)
+    def get(self, apikey):
+        owner = get_owner(ApiKey, apikey)
+        hosts = Hosts.query.filter_by(apikey_id=owner.id).all()
+        return hosts
+
+    @api.expect(host_serializer_post)
     @api.doc('add_host')
-    @api.expect(HostSerializer)
-    def post(self):
-        new_host = HostSerializer(
+    @api.marshal_with(host_serializer, code=201)
+    def post(self, apikey):
+        owner = get_owner(ApiKey, apikey)
+        new_host = Hosts(
+            apikey_id=owner.id,
             name=request.json['name'],
             url=request.json['url'],
         )
         db.session.add(new_host)
         db.session.commit()
-        return host_schema.jsonify(new_host)
+        return new_host, 201
 
 
-@api.route('/<apikey>/')
-@api.param('apikey', 'ApiKey identifier')
+@api.route('/<hostid>/<apikey>/')
+@api.param('apikey', 'Your Api Key')
+@api.param('hostid', 'Host id')
 class HostResource(Resource):
-    @api.doc('get_host')
-    @api.marshal_with(HostSerializer)
-    def get(self, apikey):
-        query = Host.query.filter_by(apikey=apikey)
-        return host_schema.dump(query)
+    @api.doc('get_status_by_hostid')
+    @api.marshal_with(stats_serializer)
+    def get(self, hostid, apikey):
+        owner = get_owner(ApiKey, apikey)
+        hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
+        host_id = int(hostid) if int(hostid) in hosts else api.abort(403)
+        stats = Stats.query.filter_by(host_id=host_id).all()
+        return stats
+
+
+@api.route('/ping-task/')
+class HostResource(Resource):
+    @api.doc('ping-task')
+    def get(self):
+        hosts = Hosts.query.filter_by(apikey_id=1).all()
+        for _, host in enumerate(hosts):
+            ping_host = requests.get(host.url, timeout=60)
+            new_stat = Stats(
+                code=ping_host.status_code,
+                response_time=ping_host.elapsed.total_seconds()*1000,
+                host_id=host.id,
+            )
+            db.session.add(new_stat)
+            db.session.commit()
+        return 'Ping task finished', 201
+
+

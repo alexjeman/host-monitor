@@ -1,14 +1,11 @@
 import os
 
-from flask_marshmallow import Marshmallow
-from flask_sqlalchemy import SQLAlchemy
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Settings(object):
     # Flask config
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db = SQLAlchemy()
-    ma = Marshmallow()
+    DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     STATIC_FOLDER = os.path.join(BASE_DIR, 'static')
     TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'templates')
