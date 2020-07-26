@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import requests
 from flask import request, abort
 from flask_mail import Message
@@ -10,7 +8,11 @@ from apps.apikeys.models import ApiKey
 from apps.apikeys.security import get_owner
 from apps.extensions import mail
 from apps.hosts.models import Hosts, Stats, db
-from apps.hosts.namespace import api, host_serializer, host_serializer_post, stats_serializer
+from apps.hosts.namespace import (api,
+                                  host_serializer,
+                                  host_serializer_post,
+                                  stats_serializer,
+                                  host_serializer_mute)
 
 
 @api.route('/<apikey>/')
@@ -56,6 +58,18 @@ class HostResource(Resource):
         stats = Stats.query.filter_by(host_id=host_id).all()
         return stats
 
+    @api.doc('mute_by_hostid')
+    @api.expect(host_serializer_mute)
+    @api.marshal_with(host_serializer_mute, code=200)
+    def put(self, hostid, apikey):
+        owner = get_owner(ApiKey, apikey)
+        hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
+        host_id = int(hostid) if int(hostid) in hosts else api.abort(403)
+        host_obj = Hosts.query.get(host_id)
+        host_obj.muted = request.json['muted']
+        db.session.commit()
+        return host_obj, 200
+
     @api.doc('delete_host')
     @api.marshal_with(host_serializer, code=202)
     def delete(self, hostid, apikey):
@@ -72,7 +86,7 @@ class HostResource(Resource):
 class HostResource(Resource):
     @api.doc('ping-task')
     def get(self):
-        hosts = Hosts.query.filter_by(apikey_id=1).all()
+        hosts = Hosts.query.filter_by(apikey_id=1, muted=False).all()
         for _, host in enumerate(hosts):
             ping_host = {"status_code": 0,
                          "response_time": 0}

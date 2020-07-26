@@ -6,12 +6,17 @@ host_serializer = api.model('HostSerializer', {
     'id': fields.Integer,
     'apikey_id': fields.Integer,
     'name': fields.String,
+    'muted': fields.Boolean,
     'url': fields.String,
 })
 
 host_serializer_post = api.model('HostSerializerPost', {
     'name': fields.String,
     'url': fields.String,
+})
+
+host_serializer_mute = api.model('HostSerializerMute', {
+    'muted': fields.Boolean,
 })
 
 stats_serializer = api.model('StatsSerializer', {

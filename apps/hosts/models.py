@@ -8,6 +8,7 @@ class Hosts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=True)
     url = db.Column(db.String, unique=True, nullable=True)
+    muted = db.Column(db.Boolean, default=False, nullable=False)
     apikey_id = db.Column(db.Integer, db.ForeignKey('apikey.id'),
                           nullable=True)
     stats = db.relationship('Stats', backref='hosts', lazy=True)
