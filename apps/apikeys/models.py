@@ -8,6 +8,8 @@ class ApiKey(db.Model):
     apikey_hash = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     hosts = db.relationship('Hosts', backref='apikey', lazy=True)
+    token = db.Column(db.String, unique=False, nullable=True)
+    chat_id = db.Column(db.Integer, nullable=True)
 
     def check_apikey(self, api, apikey):
         return verify_apikey(api, apikey_hash=self.apikey_hash, apikey=apikey)
