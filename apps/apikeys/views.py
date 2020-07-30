@@ -12,24 +12,28 @@ from apps.extensions import mail
 class ApiKeyResource(Resource):
     @api.expect(apikey_serializer_post, validate=True)
     @api.doc('generate_apikey')
-    @api.marshal_with(apikey_serializer_register, code=201)
+    @api.marshal_with(apikey_serializer_register, code=200)
     def post(self):
         generate_apikey = gen_new_key()
+        check_exists = bool(ApiKey.query.filter_by(email=request.json['email']).first())
+        if check_exists:
+            return "You are already registered.", 409
         new_apikey = ApiKey(
             apikey_hash=encrypt(generate_apikey),
             email=request.json['email']
         )
         db.session.add(new_apikey)
         db.session.commit()
-        msg = Message("Your new API key has been generated",
-                      sender="host@monitor.com",
-                      recipients=[new_apikey.email],
-                      body=f"A request has been made to create a new API key for your account."
-                           f"this API key is not recoverable, if you loose it, you should generate a new one."
-                           f"{generate_apikey}")
-        mail.send(msg)
+        if "@" in new_apikey.email:
+            msg = Message("Your new API key has been generated",
+                          sender="host@monitor.com",
+                          recipients=[new_apikey.email],
+                          body=f"A request has been made to create a new API key for your account.\n"
+                               f"This API key is not recoverable, if you loose it, you should generate a new one.\n"
+                               f"{generate_apikey}")
+            mail.send(msg)
         new_apikey.apikey = generate_apikey
-        return new_apikey, 201
+        return new_apikey, 200
 
 
 @api.route('/<apikey>/')

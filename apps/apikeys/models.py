@@ -6,7 +6,7 @@ class ApiKey(db.Model):
     __tablename__ = 'apikey'
     id = db.Column(db.Integer, primary_key=True)
     apikey_hash = db.Column(db.String, unique=True, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=True)
     hosts = db.relationship('Hosts', backref='apikey', lazy=True)
     token = db.Column(db.String, unique=False, nullable=True)
     chat_id = db.Column(db.Integer, nullable=True)
