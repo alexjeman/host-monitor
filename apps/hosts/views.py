@@ -86,7 +86,7 @@ class HostResource(Resource):
 class HostResource(Resource):
     @api.doc('ping-task')
     def get(self):
-        hosts = Hosts.query.filter_by(apikey_id=1, muted=False).all()
+        hosts = Hosts.query.filter_by(muted=False).all()
         for _, host in enumerate(hosts):
             ping_host = {"status_code": 0,
                          "response_time": 0}
