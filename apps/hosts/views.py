@@ -3,7 +3,6 @@ from flask import request, abort
 from flask_mail import Message
 from flask_restx import Resource
 from requests import exceptions
-
 from apps.apikeys.models import ApiKey
 from apps.apikeys.security import get_owner
 from apps.extensions import mail
@@ -13,7 +12,8 @@ from apps.hosts.namespace import (api,
                                   host_serializer_post,
                                   stats_serializer,
                                   host_serializer_mute)
-
+from config import Settings
+settings = Settings()
 
 @api.route('/<apikey>/')
 @api.param('apikey', 'Your Api Key')
@@ -109,16 +109,26 @@ class HostResource(Resource):
             )
             if ping_host['status_code'] > 400:
                 host_owner = ApiKey.query.get(host.apikey_id)
-                msg = Message(f"Host monitor alert {host.name}",
-                              sender="host@monitor.com",
-                              recipients=[host_owner.email],
-                              body=f"Looks like there is a problem with the host you are monitoring."
-                                   f"Host name: {host.name}"
-                                   f"Host url: {host.url}"
-                                   f"Status code: {ping_host['status_code']}"
-                                   f"Response time: {ping_host['response_time']}"
-                              )
-                mail.send(msg)
+                message_body = f"Looks like there is a problem with the host you are monitoring. 🔔\n" \
+                               f"Host name: {host.name}\n" \
+                               f"Status code: {ping_host['status_code']}\n" \
+                               f"Response time: {ping_host['response_time']} ms\n" \
+                               f"Host url: {host.url}\n"
+
+                if host_owner.chat_id is None:
+                    msg = Message(f"Host monitor alert {host.name}",
+                                  sender="host@monitor.com",
+                                  recipients=[host_owner.email],
+                                  body=message_body
+                                  )
+                    mail.send(msg)
+                else:
+                    body = {
+                            "chat_id": host_owner.chat_id,
+                            "host_id": host.id,
+                            "text": message_body
+                            }
+                    requests.post(settings.BOT_NOTIFICATIONS_URL, json=body)
 
             db.session.add(new_stat)
             db.session.commit()

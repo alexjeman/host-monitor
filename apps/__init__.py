@@ -8,14 +8,14 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restx import Api
 from apps.apikeys.views import api as apikey_namespace
-from apps.bot.views import api as bot_namespace
 from apps.extensions import db, mail
 from apps.hosts.views import api as hosts_namespace
-from config.settings import Settings
+from config import Settings
+settings = Settings()
 
 
 def ping_call():
-    requests.get(f'{os.getenv("HOST_URL")}hosts/ping-task/', timeout=60)
+    requests.get(f'{settings.HOST_URL}hosts/ping-task/', timeout=60)
 
 
 def create_app():
@@ -36,7 +36,6 @@ def create_app():
 
     api.add_namespace(apikey_namespace)
     api.add_namespace(hosts_namespace)
-    api.add_namespace(bot_namespace)
     api.init_app(app=new_app)
 
     # APScheduler

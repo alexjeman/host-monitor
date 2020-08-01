@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,6 +20,8 @@ class Settings(object):
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     DEFAULT_MAIL_SENDER = os.getenv('DEFAULT_MAIL_SENDER')
+    BOT_NOTIFICATIONS_URL = os.getenv('BOT_NOTIFICATIONS_URL')
+    HOST_URL = os.getenv('HOST_URL')
 
     # Swagger UI config
     SWAGGER_UI_OPERATION_ID = True
