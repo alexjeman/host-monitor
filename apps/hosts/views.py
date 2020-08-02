@@ -1,3 +1,5 @@
+import sys
+
 import requests
 from flask import request, abort
 from flask_mail import Message
@@ -37,7 +39,6 @@ class HostResource(Resource):
 
         new_host = Hosts(
             apikey_id=owner.id,
-            name=request.json['name'],
             url=request.json['url'],
         )
         db.session.add(new_host)
@@ -56,7 +57,7 @@ class HostResource(Resource):
         hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
         host_id = int(hostid) if int(hostid) in hosts else api.abort(403)
         stats = Stats.query.filter_by(host_id=host_id).all()
-        return stats
+        return stats[10:]
 
     @api.doc('mute_by_hostid')
     @api.expect(host_serializer_mute)
@@ -66,7 +67,9 @@ class HostResource(Resource):
         hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
         host_id = int(hostid) if int(hostid) in hosts else api.abort(403)
         host_obj = Hosts.query.get(host_id)
+        print("Callback action:", request.json, file=sys.stderr)
         host_obj.muted = request.json['muted']
+
         db.session.commit()
         return host_obj, 200
 
@@ -110,13 +113,12 @@ class HostResource(Resource):
             if ping_host['status_code'] > 400:
                 host_owner = ApiKey.query.get(host.apikey_id)
                 message_body = f"Looks like there is a problem with the host you are monitoring. 🔔\n" \
-                               f"Host name: {host.name}\n" \
                                f"Status code: {ping_host['status_code']}\n" \
                                f"Response time: {ping_host['response_time']} ms\n" \
                                f"Host url: {host.url}\n"
 
                 if host_owner.chat_id is None:
-                    msg = Message(f"Host monitor alert {host.name}",
+                    msg = Message(f"Host monitor alert {host.url}",
                                   sender="host@monitor.com",
                                   recipients=[host_owner.email],
                                   body=message_body

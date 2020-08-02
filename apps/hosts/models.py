@@ -6,15 +6,13 @@ from apps.extensions import db
 class Hosts(db.Model):
     __tablename__ = 'hosts'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, unique=True, nullable=True)
     url = db.Column(db.String, unique=True, nullable=True)
     muted = db.Column(db.Boolean, default=False, nullable=False)
     apikey_id = db.Column(db.Integer, db.ForeignKey('apikey.id'),
                           nullable=True)
     stats = db.relationship('Stats', backref='hosts', lazy=True)
 
-    def __init__(self, name, url, apikey_id):
-        self.name = name
+    def __init__(self, url, apikey_id):
         self.url = url
         self.apikey_id = apikey_id
 

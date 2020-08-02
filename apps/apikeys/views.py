@@ -3,7 +3,7 @@ from flask_mail import Message
 from flask_restx import Resource
 from sqlalchemy import null
 from apps.apikeys.models import ApiKey, db
-from apps.apikeys.namespace import api, apikey_serializer, apikey_serializer_post, apikey_serializer_register
+from apps.apikeys.namespace import api, apikey_serializer, apikey_serializer_post, apikey_serializer_register, apikey_serializer_link
 from apps.apikeys.security import encrypt, gen_new_key, get_owner
 from apps.extensions import mail
 
@@ -64,3 +64,13 @@ class ApiKeyResource(Resource):
     def get(self, apikey):
         api_info = get_owner(ApiKey, apikey)
         return api_info
+
+    @api.expect(apikey_serializer_link, validate=True)
+    @api.doc('link_apikey', model=apikey_serializer)
+    @api.marshal_with(apikey_serializer)
+    def post(self, apikey):
+        owner = get_owner(ApiKey, apikey)
+        owner.chat_id = request.json['chat_id']
+        db.session.add(owner)
+        db.session.commit()
+        return owner, 200

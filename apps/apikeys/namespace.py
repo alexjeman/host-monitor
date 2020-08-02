@@ -14,6 +14,10 @@ apikey_serializer_post = api.model('ApiKeyPost', {
     'email': fields.String,
 })
 
+apikey_serializer_link = api.model('ApiKeyLink', {
+    'chat_id': fields.String,
+})
+
 apikey_serializer_register = api.model('ApiKeyRegister', {
     'email': fields.String,
     'apikey': fields.String,
