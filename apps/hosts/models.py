@@ -6,7 +6,7 @@ from apps.extensions import db
 class Hosts(db.Model):
     __tablename__ = 'hosts'
     id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String, unique=True, nullable=True)
+    url = db.Column(db.String, unique=False, nullable=True)
     muted = db.Column(db.Boolean, default=False, nullable=False)
     apikey_id = db.Column(db.Integer, db.ForeignKey('apikey.id'),
                           nullable=True)
