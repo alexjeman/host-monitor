@@ -22,11 +22,12 @@ class Stats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String, unique=False, nullable=True)
     response_time = db.Column(db.Integer, unique=False, nullable=True)
-    time = db.Column(db.DateTime(timezone=True), default=func.now())
+    time = db.Column(db.DateTime, index=False, unique=False, nullable=False)
     host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'),
                         nullable=True)
 
-    def __init__(self, code, response_time, host_id):
+    def __init__(self, code, response_time, time, host_id):
         self.code = code
         self.response_time = response_time
+        self.time = time
         self.host_id = host_id

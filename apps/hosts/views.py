@@ -15,6 +15,7 @@ from apps.hosts.namespace import (api,
                                   stats_serializer,
                                   host_serializer_mute)
 from config import Settings
+from datetime import datetime
 settings = Settings()
 
 @api.route('/<apikey>/')
@@ -112,11 +113,12 @@ class HostResource(Resource):
             new_stat = Stats(
                 code=ping_host.get('status_code'),
                 response_time=ping_host.get('response_time'),
+                time=datetime.now().replace(microsecond=0),
                 host_id=host.id,
             )
             if ping_host['status_code'] > 400:
                 host_owner = ApiKey.query.get(host.apikey_id)
-                message_body = f"Looks like there is a problem with the host you are monitoring. 🔔\n" \
+                message_body = f"Looks like there is a problem with the host you are monitoring. 🚧\n" \
                                f"Status code: {ping_host['status_code']}\n" \
                                f"Response time: {ping_host['response_time']} ms\n" \
                                f"Host url: {host.url}\n"
