@@ -36,6 +36,10 @@ class HostResource(Resource):
             requests.get(request.json['url'], timeout=60)
         except exceptions.ConnectionError:
             return abort(400, 'This host does not seem to exist, please enter a valid http destination.')
+        except exceptions.MissingSchema:
+            return abort(400, 'This does not look like a valid http destination.')
+        except exceptions.InvalidSchema:
+            return abort(400, 'This does not look like a valid http destination.')
 
         new_host = Hosts(
             apikey_id=owner.id,
