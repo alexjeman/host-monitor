@@ -60,8 +60,8 @@ class HostResource(Resource):
         owner = get_owner(ApiKey, apikey)
         hosts = [host.id for host in Hosts.query.filter_by(apikey_id=owner.id).all()]
         host_id = int(hostid) if int(hostid) in hosts else api.abort(403)
-        stats = Stats.query.filter_by(host_id=host_id).all()
-        return stats[10:]
+        stats = Stats.query.filter_by(host_id=host_id).order_by('time').all()[-20:]
+        return stats
 
     @api.doc('mute_by_hostid')
     @api.expect(host_serializer_mute)
